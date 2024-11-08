@@ -1,8 +1,7 @@
-
 # Beginner Tutorials - ROS 2 Publisher Node
 
 ## Overview
-The `beginner_tutorials` package is part of a set of beginner-friendly ROS 2 tutorials. This package contains a simple publisher node called `talker` that publishes a string message to a ROS 2 topic named `/chatter`. The aim is to provide an easy introduction to ROS 2 node communication.
+The `beginner_tutorials` package is part of a set of beginner-friendly ROS 2 tutorials. This package contains a simple publisher node called `talker` that publishes messages to a topic, as well as a service that allows you to change the base output string of the published messages. This package serves as an introduction to working with nodes, services, logging levels, and launch files in ROS 2.
 
 The package is built in **C++** and follows **Google C++ Style Guide** standards with additional modifications. 
 
@@ -48,12 +47,15 @@ colcon build --packages-select beginner_tutorials
 source ~/ros2_ws/install/setup.bash
 ```
 
-5. Run the Publisher (talker) Node:
+5. Launch the (talker) Node:
 ```bash
-ros2 run beginner_tutorials talker
+ros2 launch beginner_tutorials talker_launch.py publish_frequency:=1000
 
 ```
-
+6. Changing the output string
+```bash
+ros2 service call /change_output_string example_interfaces/srv/SetBool "{data: true}"
+```
 
 **Running Static Analysis Tools
 ```bash

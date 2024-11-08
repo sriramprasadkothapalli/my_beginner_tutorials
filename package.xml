@@ -5,12 +5,12 @@
   <description>Beginner tutorials for ROS2 in C++</description>
   <maintainer email="sriram21@umd.edu">Your Name</maintainer>
   <license>Apache 2.0</license>
-
+  <license>MIT</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
-
+  <depend>example_interfaces</depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
