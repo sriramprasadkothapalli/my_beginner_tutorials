@@ -1,13 +1,11 @@
-// Copyright 2024 Sriramprasad Kothapalli
-// Licensed under the MIT License.
-// See LICENSE file in the root of this repository for details.
-
 #include <chrono>
 #include <memory>
 #include <string>
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "example_interfaces/srv/set_bool.hpp"
+#include "tf2_ros/transform_broadcaster.h"
+#include "geometry_msgs/msg/transform_stamped.hpp"
 
 using namespace std::chrono_literals;
 
@@ -20,7 +18,7 @@ class TalkerNode : public rclcpp::Node {
  public:
   /**
    * @brief Constructor for the TalkerNode class.
-   * Initializes the publisher, timer, and service.
+   * Initializes the publisher, timer, service, and tf broadcaster.
    */
   TalkerNode()
   : Node("talker"), base_output_string_("Hello ROS2") {
@@ -34,6 +32,9 @@ class TalkerNode : public rclcpp::Node {
         "change_output_string",
         std::bind(&TalkerNode::handle_change_output_string, this,
         std::placeholders::_1, std::placeholders::_2));
+
+    // Initialize transform broadcaster
+    tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
     RCLCPP_INFO(this->get_logger(), "TalkerNode has been started.");
     RCLCPP_DEBUG(this->get_logger(),
@@ -49,28 +50,16 @@ class TalkerNode : public rclcpp::Node {
    */
   void publish_message() {
     auto message = std_msgs::msg::String();
-    message.data = base_output_string_ +
-     ", message count: "
-                   + std::to_string(count_++);
-    RCLCPP_INFO_STREAM(this->get_logger(),
-    "Publishing: '" << message.data << "'");
+    message.data = base_output_string_ + ", message count: " + std::to_string(count_++);
+    RCLCPP_INFO_STREAM(this->get_logger(), "Publishing: '" << message.data << "'");
     publisher_->publish(message);
+
     // Additional log levels
     if (count_ % 5 == 0) {
-      RCLCPP_WARN(this->get_logger(),
-      "Count has reached a multiple of 5: %zu", count_);
+      RCLCPP_WARN(this->get_logger(), "Count has reached a multiple of 5: %zu", count_);
     }
-
-    if (count_ > 20) {
-      RCLCPP_ERROR(this->get_logger(),
-                   "Count has exceeded 20, something might be wrong!");
-    }
-
-    if (count_ > 50) {
-      RCLCPP_FATAL(this->get_logger(),
-      "Count has exceeded 50, shutting down node.");
-      rclcpp::shutdown();
-    }
+    // Broadcast the transform with translation and rotation
+    broadcast_transform();
   }
 
   /**
@@ -91,9 +80,35 @@ class TalkerNode : public rclcpp::Node {
       base_output_string_ = "Hello ROS2";
       response->success = true;
       response->message = "Base output string reset to default.";
-      RCLCPP_DEBUG(this->get_logger(),
-                   "Base output string has been reset to default.");
+      RCLCPP_DEBUG(this->get_logger(), "Base output string has been reset to default.");
     }
+  }
+
+  /**
+   * @brief Broadcasts the /talk transform relative to /world.
+   * The transform includes translation and rotation.
+   */
+  void broadcast_transform() {
+    geometry_msgs::msg::TransformStamped transformStamped;
+
+    // Set frame names
+    transformStamped.header.stamp = this->now();
+    transformStamped.header.frame_id = "world";
+    transformStamped.child_frame_id = "talk";
+
+    // Set translation (non-zero)
+    transformStamped.transform.translation.x = 1.0;
+    transformStamped.transform.translation.y = 2.0;
+    transformStamped.transform.translation.z = 3.0;
+
+    // Set rotation (non-zero, as quaternion)
+    transformStamped.transform.rotation.x = 0.0;
+    transformStamped.transform.rotation.y = 0.0;
+    transformStamped.transform.rotation.z = 0.707; // 90 degrees around z-axis
+    transformStamped.transform.rotation.w = 0.707;
+
+    // Send the transform
+    tf_broadcaster_->sendTransform(transformStamped);
   }
 
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
@@ -106,6 +121,8 @@ class TalkerNode : public rclcpp::Node {
   /// < Counter for the number of messages published.
   std::string base_output_string_;
   /// < The base string used in published messages.
+  std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+  /// < Transform broadcaster for broadcasting the transform.
 };
 
 /**
@@ -119,8 +136,7 @@ int main(int argc, char *argv[]) {
   RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Initializing TalkerNode...");
   auto node = std::make_shared<TalkerNode>();
   rclcpp::spin(node);
-  RCLCPP_FATAL(rclcpp::get_logger("rclcpp"),
-               "Shutting down TalkerNode due to rclcpp::shutdown()");
+  RCLCPP_FATAL(rclcpp::get_logger("rclcpp"), "Shutting down TalkerNode due to rclcpp::shutdown()");
   rclcpp::shutdown();
   return 0;
 }

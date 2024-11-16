@@ -1,1 +1,9 @@
+talker.cpp:0:  No copyright message found.  You should have a line: "Copyright [year] <Copyright Owner>"  [legal/copyright] [5]
+talker.cpp:53:  Lines should be <= 80 characters long  [whitespace/line_length] [2]
+talker.cpp:54:  Lines should be <= 80 characters long  [whitespace/line_length] [2]
+talker.cpp:59:  Lines should be <= 80 characters long  [whitespace/line_length] [2]
+talker.cpp:83:  Lines should be <= 80 characters long  [whitespace/line_length] [2]
+talker.cpp:107:  At least two spaces is best between code and comments  [whitespace/comments] [2]
+talker.cpp:139:  Lines should be <= 80 characters long  [whitespace/line_length] [2]
 Done processing talker.cpp
+Total errors found: 7
